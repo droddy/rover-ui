@@ -16,6 +16,7 @@ import styles from './Dropdown.module.css';
 interface DropdownProps {
   className?: string;
   disabled?: boolean;
+  formatTime?: (date: Date) => string;
   max?: string;
   min?: string;
   onSelectMenuItem: Function;
@@ -30,6 +31,7 @@ interface DropdownProps {
 const Dropdown: React.FC<DropdownProps> = ({
   className = '',
   disabled,
+  formatTime,
   max,
   min,
   onSelectMenuItem,
@@ -83,10 +85,13 @@ const Dropdown: React.FC<DropdownProps> = ({
     do {
       attempts += 1;
 
-      const label = current.toLocaleTimeString([], {
-        hour: 'numeric',
-        minute: '2-digit',
-      });
+      const label =
+        typeof formatTime === 'function'
+          ? formatTime(current)
+          : current.toLocaleTimeString([], {
+              hour: 'numeric',
+              minute: '2-digit',
+            });
 
       if (
         (maxDate === undefined || current <= maxDate) &&
@@ -105,7 +110,16 @@ const Dropdown: React.FC<DropdownProps> = ({
     } while (attempts <= maxAttempts && current < end);
 
     return options;
-  }, [customStep, max, min, value, onSelectMenuItem, showDropdown, stepFrom]);
+  }, [
+    customStep,
+    formatTime,
+    max,
+    min,
+    onSelectMenuItem,
+    showDropdown,
+    stepFrom,
+    value,
+  ]);
 
   return (
     <EasyDropdown

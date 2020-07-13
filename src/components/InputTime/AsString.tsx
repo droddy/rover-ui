@@ -28,6 +28,7 @@ import styles from './InputTime.module.css';
 
 export interface AsStringProps
   extends Omit<InputProps, 'value' | 'max' | 'min'> {
+  formatTime?: (date: Date) => string;
   max?: string;
   min?: string;
   showDropdown?: 'click' | 'none' | null;
@@ -38,6 +39,7 @@ export interface AsStringProps
 const AsString: React.FC<AsStringProps> = ({
   className = '',
   disabled,
+  formatTime,
   forwardedRef,
   max,
   min,
@@ -96,7 +98,7 @@ const AsString: React.FC<AsStringProps> = ({
 
   // Fuzzy value is user input.
   const [fuzzyValue, setFuzzyValue] = useState(
-    value ? getLocaleTimeStringFromShortTimeString(value) : ''
+    value ? getLocaleTimeStringFromShortTimeString(value, { formatTime }) : ''
   );
 
   const syncValidity = (
@@ -137,16 +139,21 @@ const AsString: React.FC<AsStringProps> = ({
   };
 
   const handleBlurFuzzyValue = () => {
-    setFuzzyValue(value ? getLocaleTimeStringFromShortTimeString(value) : '');
+    setFuzzyValue(
+      value ? getLocaleTimeStringFromShortTimeString(value, { formatTime }) : ''
+    );
   };
 
   const handleSelectMenuItem = (e: { target: { value: Date } }) => {
     const dateTime = e.target.value;
 
-    const label = dateTime.toLocaleTimeString([], {
-      hour: 'numeric',
-      minute: '2-digit',
-    });
+    const label =
+      typeof formatTime === 'function'
+        ? formatTime(dateTime)
+        : dateTime.toLocaleTimeString([], {
+            hour: 'numeric',
+            minute: '2-digit',
+          });
 
     const timeString = getShortTimeString(
       dateTime.getHours(),
@@ -165,7 +172,11 @@ const AsString: React.FC<AsStringProps> = ({
     }
 
     if (localRef?.current && document.activeElement !== localRef?.current) {
-      setFuzzyValue(value ? getLocaleTimeStringFromShortTimeString(value) : '');
+      setFuzzyValue(
+        value
+          ? getLocaleTimeStringFromShortTimeString(value, { formatTime })
+          : ''
+      );
     }
 
     syncValidity(shadowTimeInputRef, localRef);
@@ -206,16 +217,17 @@ const AsString: React.FC<AsStringProps> = ({
         />
         {showDropdown && (
           <Dropdown
-            toggleAriaLabel={toggleAriaLabel}
             className={styles.addons}
             disabled={disabled}
+            formatTime={formatTime}
             max={max}
             min={min}
-            value={value}
             onSelectMenuItem={handleSelectMenuItem}
             showDropdown={showDropdown}
             step={step}
             stepFrom={stepFrom}
+            toggleAriaLabel={toggleAriaLabel}
+            value={value}
           />
         )}
       </div>
